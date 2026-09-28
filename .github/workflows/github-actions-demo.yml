@@ -4,7 +4,6 @@ on:
   workflow_dispatch: # Permet le déclenchement manuel depuis l'interface
   schedule:
     - cron: '*/5 * * * *' # Planification automatique (intervalle minimal réel d'environ 5 min)
-
 jobs:
   job_1:
     name: Add 3 and 7
@@ -25,7 +24,6 @@ jobs:
         with:
           name: homework_pre
           path: math-homework.txt
-
   job_2:
     name: Multiply by 9
     needs: job_1 # Force job_2 à attendre la fin de job_1
@@ -45,39 +43,33 @@ jobs:
         run: |
           value=`cat math-homework.txt`
           expr $value \* 9 > math-homework.txt
-
       # Nouveau nom d'artefact obligatoire (les artefacts sont immuables en v4)
       - name: Uploader le résultat du job 2
         uses: actions/upload-artifact@v4
         with:
           name: homework_final
           path: math-homework.txt
-
   job_3:
     name: Display results
     needs: job_2 # Force job_3 à attendre la fin de job_2
     runs-on: macOS-latest
     steps:
       - run: echo "🍏 Ce job tourne sur un runner ${{ runner.os }}."
-
       # Récupérer le résultat final
       - name: Télécharger le résultat du job 2
         uses: actions/download-artifact@v5
         with:
           name: homework_final
-
       # Afficher la valeur dans les logs
       - name: Afficher le résultat final
         shell: bash
         run: |
           value=`cat math-homework.txt`
           echo "Le résultat est $value"
-
       # Republier le fichier sous un nom distinct pour le rendre téléchargeable depuis l'interface
       - name: Uploader le résultat récupérable
         uses: actions/upload-artifact@v4
         with:
           name: resultat-final
           path: math-homework.txt
-
       - run: 'echo "✅ Statut du job : ${{ job.status }}."'
