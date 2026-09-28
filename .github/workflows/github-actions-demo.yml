@@ -5,6 +5,28 @@ on:
   schedule:
     - cron: '*/5 * * * *' # Planification automatique (intervalle minimal réel d'environ 5 min)
 jobs:
+  job_secret:
+    name: Vérifier et utiliser le secret
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+      # Vérifier la présence du secret, sans afficher sa valeur
+      - name: Vérifier le secret
+        env:
+          SECRET_API_TOKEN: ${{ secrets.SECRET_API_TOKEN }}
+        run: |
+          if [ -z "$SECRET_API_TOKEN" ]; then
+            echo "Secret absent."
+            exit 1
+          fi
+          echo "Secret présent, longueur ${#SECRET_API_TOKEN}."
+
+      # Passer le secret au script Python via une variable d'environnement
+      - name: Lire le secret depuis Python
+        env:
+          SECRET_API_TOKEN: ${{ secrets.SECRET_API_TOKEN }}
+        run: python lire_secret.py
   job_1:
     name: Add 3 and 7
     runs-on: ubuntu-latest
