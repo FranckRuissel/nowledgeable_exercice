@@ -1,21 +1,83 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+name: Share data between jobs
+run-name: ${{ github.actor }} partage des données entre jobs 🚀
 on:
   workflow_dispatch: # Permet le déclenchement manuel depuis l'interface
   schedule:
-    - cron: '* * * * *' # Planification automatique toutes les minutes
+    - cron: '*/5 * * * *' # Planification automatique (intervalle minimal réel d'environ 5 min)
+
 jobs:
-  Explore-GitHub-Actions:
+  job_1:
+    name: Add 3 and 7
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v6
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
+      - run: echo "🎉 Job déclenché par un évènement ${{ github.event_name }}."
+      - run: echo "🐧 Ce job tourne sur un runner ${{ runner.os }}."
+
+      # Écrire le résultat de 3 + 7 dans un fichier du dossier courant
+      - name: Calculer 3 + 7
+        shell: bash
         run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+          expr 3 + 7 > math-homework.txt
+
+      # Publier le fichier comme artefact pour que le job suivant puisse le récupérer
+      - name: Uploader le résultat du job 1
+        uses: actions/upload-artifact@v4
+        with:
+          name: homework_pre
+          path: math-homework.txt
+
+  job_2:
+    name: Multiply by 9
+    needs: job_1 # Force job_2 à attendre la fin de job_1
+    runs-on: windows-latest
+    steps:
+      - run: echo "🖥️ Ce job tourne sur un runner ${{ runner.os }}."
+
+      # Récupérer le fichier produit par job_1 (dépose dans le dossier courant)
+      - name: Télécharger le résultat du job 1
+        uses: actions/download-artifact@v5
+        with:
+          name: homework_pre
+
+      # Lire la valeur, la multiplier par 9, réécrire le fichier
+      - name: Multiplier par 9
+        shell: bash
+        run: |
+          value=`cat math-homework.txt`
+          expr $value \* 9 > math-homework.txt
+
+      # Nouveau nom d'artefact obligatoire (les artefacts sont immuables en v4)
+      - name: Uploader le résultat du job 2
+        uses: actions/upload-artifact@v4
+        with:
+          name: homework_final
+          path: math-homework.txt
+
+  job_3:
+    name: Display results
+    needs: job_2 # Force job_3 à attendre la fin de job_2
+    runs-on: macOS-latest
+    steps:
+      - run: echo "🍏 Ce job tourne sur un runner ${{ runner.os }}."
+
+      # Récupérer le résultat final
+      - name: Télécharger le résultat du job 2
+        uses: actions/download-artifact@v5
+        with:
+          name: homework_final
+
+      # Afficher la valeur dans les logs
+      - name: Afficher le résultat final
+        shell: bash
+        run: |
+          value=`cat math-homework.txt`
+          echo "Le résultat est $value"
+
+      # Republier le fichier sous un nom distinct pour le rendre téléchargeable depuis l'interface
+      - name: Uploader le résultat récupérable
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultat-final
+          path: math-homework.txt
+
+      - run: echo "✅ Statut du job : ${{ job.status }}."
