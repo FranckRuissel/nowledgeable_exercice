@@ -72,4 +72,6 @@ jobs:
         with:
           name: resultat-final
           path: math-homework.txt
-      - run: 'echo "✅ Statut du job : ${{ job.status }}."'
+      - run: |
+        echo "✅ Statut du job : ${{ job.status }}."
+      
