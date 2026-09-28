@@ -74,4 +74,3 @@ jobs:
           path: math-homework.txt
       - run: |
           echo "✅ Statut du job : ${{ job.status }}."
-      
