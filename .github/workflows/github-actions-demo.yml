@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} partage des données entre jobs 🚀
 on:
   workflow_dispatch: # Permet le déclenchement manuel depuis l'interface
   schedule:
-    - cron: '*/5 * * * *' # Planification automatique (intervalle minimal réel d'environ 5 min)
+   # - cron: '*/5 * * * *' # Planification automatique (intervalle minimal réel d'environ 5 min)
 jobs:
   job_secret:
     name: Vérifier et utiliser le secret
